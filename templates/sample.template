@@ -24,25 +24,42 @@ Parameters:
   PortMappingsThunderBird:
     Default: 9100
     Type: Number
-  ScalingTargetRequired:
-    Description: ScalingTargetRequired
-    Default: 'No'
+  ECRRepoThunderBird:
+    Default: doos/thunderbird
+    Description: ECR Name
     Type: String
-    AllowedValues:
-      - 'Yes'
-      - 'No'
-  ALBCanonicalHostedZoneID:
-    Default: ZP97RAFLXTNZK
-    Description: ALB Canonical HostedZone ID.
+  ApplicationNameAtlas:
+    Default: atlas
+    Description: Application Name
     Type: String
-  InternalHostedZoneId:
-    Default: Z34RAEX25YZORT
-    Description: Internal HostedZone ID.
+  PortMappingsAtlas:
+    Default: 9100
+    Type: Number
+  ECRRepoAtlas:
+    Default: doos/atlas
+    Description: ECR Name
     Type: String
-  ALBListener:
-    Default: >-
-      arn:aws:elasticloadbalancing:ap-south-1:067138747236:listener/app/ALB-int-common-api-prod/3b2a612a1e7ad967/196ae8c2bc7df9da
-    Description: Internal HostedZone ID.
+  PortMappingsTransporterClient:
+    Default: 9100
+    Type: Number
+  ECRRepoTransporterClient:
+    Default: doos/transporterclient
+    Description: ECR Name
+    Type: String
+  ApplicationNameTransporterClient:
+    Default: transporterclient
+    Description: Application Name
+    Type: String
+  ApplicationNameReporting:
+    Default: reporting
+    Description: Application Name
+    Type: String
+  PortMappingsReporting:
+    Default: 9200
+    Type: Number
+  ECRRepoReporting:
+    Default: doos/reporting
+    Description: ECR Name
     Type: String
   ProjectName:
     Default: ECS
@@ -53,234 +70,289 @@ Parameters:
     Default: api
     Type: String
   OperatorEmail:
+    Default: dev-ops@fptechscience.com
     Description: EMail address to notify if there are any operational issues
     Type: String
-    Default: dev-ops@fptechscience.com
     AllowedPattern: >-
       ([a-zA-Z0-9_\-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)
     ConstraintDescription: must be a valid email address.
 Mappings:
   Environment:
     dev:
-      NestedTemplateURL: >-
-        https://s3.ap-south-1.amazonaws.com/fpts-devops/aws/ecs-setup/api/nested-ecs-api-service-dev.template
-      ECSClusterName: ECS-M-cluster-api-devops-dev
-      InternalALBEndpoint: >-
-        internal-ALB-int-logistics-api-dev-924057639.ap-south-1.elb.amazonaws.com
-      InternalALBArn: >-
-        arn:aws:elasticloadbalancing:ap-south-1:067138747236:loadbalancer/app/ALB-int-logistics-api-dev/082a1087e75cee6d
-      InternalALBFullName: app/ALB-int-logistics-api-dev/082a1087e75cee6d
-      ContainerNameRateEngine: logistics-rateengine-app-container-dev
-      DomainNameRateEngine: rateengine-api-dev.fptsinternal.com
-      ECSTaskDefinitionArnRateEngine: >-
-        arn:aws:ecs:ap-south-1:067138747236:task-definition/logistics-rateengine-app-td-dev:59
-      ServiceNameRateEngine: logistics-rateengine-dev
-      UnhealthyHostSNS: 'arn:aws:sns:ap-south-1:067138747236:Devops_SNS_UnhealthyHost'
-      5XXCodeSNS: 'arn:aws:sns:ap-south-1:067138747236:Devops_SNS_5xx_code'
-      VpcId: vpc-b43b33dd
+      EnvironUsed: dev
     stage:
-      NestedTemplateURL: >-
-        https://s3.ap-south-1.amazonaws.com/fpts-devops/aws/ecs-setup/api/nested-ecs-api-service-stage.template
-      ECSClusterName: ECS-M-cluster-api-devops-stage
-      InternalALBEndpoint: >-
-        internal-ALB-int-common-api-stage-1802137141.ap-south-1.elb.amazonaws.com
-      InternalALBArn: >-
-        arn:aws:elasticloadbalancing:ap-south-1:067138747236:loadbalancer/app/ALB-int-common-api-stage/5bfe2ea956cdc1f2
-      InternalALBFullName: app/ALB-int-common-api-stage/5bfe2ea956cdc1f2
-      ContainerNameThunderBird: doos-thunderbird-app-container-stage
-      DomainNameThunderBird: thunderbird-api-stage.fptsinternal.com
-      ECSTaskDefinitionArnThunderBird: >-
-        arn:aws:ecs:ap-south-1:067138747236:task-definition/doos-thunderbird-app-td-stage:1
-      ServiceNameThunderBird: doos-thunderbird-stage
-      UnhealthyHostSNS: 'arn:aws:sns:ap-south-1:067138747236:Devops_SNS_UnhealthyHost'
-      5XXCodeSNS: 'arn:aws:sns:ap-south-1:067138747236:Devops_SNS_5xx_code'
-      VpcId: vpc-5cc0c835
+      EnvironUsed: staging
     preprod:
-      NestedTemplateURL: >-
-        https://s3.ap-south-1.amazonaws.com/fpts-devops/aws/ecs-setup/api/nested-ecs-api-service-preprod.template
-      ECSClusterName: ECS-M-cluster-api-devops-preprod
-      InternalALBEndpoint: >-
-        internal-ALB-int-common-api-preprod-2078867008.ap-south-1.elb.amazonaws.com
-      InternalALBArn: >-
-        arn:aws:elasticloadbalancing:ap-south-1:067138747236:loadbalancer/app/ALB-int-common-api-preprod/cc884d778db7bb9a
-      InternalALBFullName: app/ALB-int-common-api-preprod/cc884d778db7bb9a
-      ContainerNameThunderBird: doos-thunderbird-app-container-preprod
-      DomainNameThunderBird: thunderbird-api-preprod.fptsinternal.com
-      ECSTaskDefinitionArnThunderBird: >-
-        arn:aws:ecs:ap-south-1:067138747236:task-definition/doos-thunderbird-app-td-preprod:1
-      ServiceNameThunderBird: doos-thunderbird-preprod
-      UnhealthyHostSNS: 'arn:aws:sns:ap-south-1:067138747236:Devops_SNS_UnhealthyHost'
-      5XXCodeSNS: 'arn:aws:sns:ap-south-1:067138747236:Devops_SNS_5xx_code'
-      VpcId: vpc-53c0c83a
+      EnvironUsed: preprod
     prod:
-      NestedTemplateURL: >-
-        https://s3.ap-south-1.amazonaws.com/fpts-devops/aws/ecs-setup/api/nested-ecs-api-service-prod.template
-      ECSClusterName: ECS-M-cluster-api-devops-prod
-      InternalALBEndpoint: internal-ALB-int-common-api-prod-2075336545.ap-south-1.elb.amazonaws.com
-      InternalALBArn: >-
-        arn:aws:elasticloadbalancing:ap-south-1:067138747236:loadbalancer/app/ALB-int-common-api-prod/3b2a612a1e7ad967
-      InternalALBFullName: app/ALB-int-common-api-prod/3b2a612a1e7ad967
-      ContainerNameThunderBird: doos-thunderbird-app-container-prod
-      DomainNameThunderBird: thunderbird-api.fptsinternal.com
-      ECSTaskDefinitionArnThunderBird: >-
-        arn:aws:ecs:ap-south-1:067138747236:task-definition/doos-thunderbird-app-td-prod:2
-      ServiceNameThunderBird: doos-thunderbird-prod
-      UnhealthyHostSNS: 'arn:aws:sns:ap-south-1:067138747236:Devops_SNS_UnhealthyHost-Prod'
-      5XXCodeSNS: 'arn:aws:sns:ap-south-1:067138747236:Devops_SNS_5xx_code-Prod'
-      VpcId: vpc-383b3351
+      EnvironUsed: prod
 Resources:
-  ECSServiceRole:
+  ECSTaskRole:
     Type: 'AWS::IAM::Role'
     Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - ecs.amazonaws.com
-            Action:
-              - 'sts:AssumeRole'
-      Path: /
-      Policies:
-        - PolicyName: !Join 
-            - '-'
-            - - !Ref TeamName
-              - servicerole-policy
-              - !Ref EnvironUsed
-          PolicyDocument:
-            Statement:
-              - Effect: Allow
-                Action: '*'
-                Resource: '*'
-  AutoscalingRole:
-    Type: 'AWS::IAM::Role'
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - application-autoscaling.amazonaws.com
-            Action:
-              - 'sts:AssumeRole'
-      Path: /
-      Policies:
-        - PolicyName: !Join 
-            - '-'
-            - - !Ref TeamName
-              - service-autoscaling
-              - !Ref EnvironUsed
-          PolicyDocument:
-            Statement:
-              - Effect: Allow
-                Action:
-                  - 'application-autoscaling:*'
-                  - 'cloudwatch:DescribeAlarms'
-                  - 'cloudwatch:PutMetricAlarm'
-                  - 'ecs:DescribeServices'
-                  - 'ecs:UpdateService'
-                Resource: '*'
-  TargetGroupThunderBird:
-    Type: 'AWS::ElasticLoadBalancingV2::TargetGroup'
-    Properties:
-      HealthCheckIntervalSeconds: 121
-      HealthCheckPath: /health
-      HealthCheckProtocol: HTTP
-      HealthCheckTimeoutSeconds: 120
-      HealthyThresholdCount: 2
-      Name: !Join 
+      RoleName: !Join 
         - '-'
-        - - TG
-          - !Ref ApplicationNameThunderBird
+        - - !Ref TeamName
+          - !Ref ProjectName
+          - TaskRole
+          - !Ref ServiceName
           - !Ref EnvironUsed
-      Port: 80
-      Protocol: HTTP
-      UnhealthyThresholdCount: 5
-      VpcId: !FindInMap 
-        - Environment
-        - !Ref EnvironUsed
-        - VpcId
-  ECSALBListenerRuleThunderBird:
-    Type: 'AWS::ElasticLoadBalancingV2::ListenerRule'
-    DependsOn:
-      - TargetGroupThunderBird
-    Properties:
-      Actions:
-        - Type: forward
-          TargetGroupArn: !Ref TargetGroupThunderBird
-      Conditions:
-        - Field: host-header
-          Values:
-            - !FindInMap 
-              - Environment
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ecs-tasks.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: !Join 
+            - '-'
+            - - !Ref TeamName
+              - !Ref ProjectName
+              - TaskRolePolicy
+              - !Ref ServiceName
               - !Ref EnvironUsed
-              - DomainNameThunderBird
-      ListenerArn: !Ref ALBListener
-      Priority: 399
-  ThunderBird:
-    Type: 'AWS::CloudFormation::Stack'
-    DependsOn:
-      - TargetGroupThunderBird
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: S3Policy
+                Effect: Allow
+                Action:
+                  - 's3:list*'
+                  - 's3:get*'
+                  - 's3:put*'
+                Resource:
+                  - 'arn:aws:s3:::fpts-devops'
+                  - 'arn:aws:s3:::fpts-devops/*'
+              - Sid: CloudWatchMetricPermission
+                Effect: Allow
+                Action:
+                  - 'cloudwatch:PutMetricData'
+                Resource: '*'
+              - Sid: EC2Permission
+                Effect: Allow
+                Action:
+                  - 'ec2:DescribeTags'
+                Resource: '*'
+  ECSTaskDefinitionThunderBird:
+    Type: 'AWS::ECS::TaskDefinition'
     Properties:
-      TemplateURL: !FindInMap 
-        - Environment
-        - !Ref EnvironUsed
-        - NestedTemplateURL
-      Parameters:
-        EnvironUsed: !Ref EnvironUsed
-        ScalingTargetRequired: !Ref ScalingTargetRequired
-        ApplicationName: !Ref ApplicationNameThunderBird
-        ServiceDomainName: !FindInMap 
-          - Environment
+      Family: !Join 
+        - '-'
+        - - !Ref TeamName
+          - !Ref ApplicationNameThunderBird
+          - app
+          - td
           - !Ref EnvironUsed
-          - DomainNameThunderBird
-        HostedZoneId: !Ref InternalHostedZoneId
-        TargetGroupArn: !Ref TargetGroupThunderBird
-        ContainerPort: !Ref PortMappingsThunderBird
-        ContainerName: !FindInMap 
-          - Environment
+      TaskRoleArn: !Ref ECSTaskRole
+      ContainerDefinitions:
+        - Name: !Join 
+            - '-'
+            - - !Ref TeamName
+              - !Ref ApplicationNameThunderBird
+              - app
+              - container
+              - !Ref EnvironUsed
+          Cpu: '150'
+          Essential: 'true'
+          Image: !Join 
+            - ''
+            - - !Ref 'AWS::AccountId'
+              - .dkr.ecr.
+              - !Ref 'AWS::Region'
+              - .amazonaws.com/
+              - !Ref ECRRepoThunderBird
+              - ':'
+              - latest
+          MountPoints:
+            - ReadOnly: true
+              ContainerPath: /code/ecs
+              SourceVolume: ecs_env_var
+          Memory: '600'
+          PortMappings:
+            - ContainerPort: !Ref PortMappingsThunderBird
+          Environment:
+            - Name: Environment
+              Value: !FindInMap 
+                - Environment
+                - !Ref EnvironUsed
+                - EnvironUsed
+            - Name: TeamName
+              Value: !Ref TeamName
+            - Name: ServiceName
+              Value: !Ref ApplicationNameThunderBird
+            - Name: Port
+              Value: !Ref PortMappingsThunderBird
+      Volumes:
+        - Name: ecs_env_var
+          Host:
+            SourcePath: /root/ecs_var
+  ECSTaskDefinitionAtlas:
+    Type: 'AWS::ECS::TaskDefinition'
+    Properties:
+      Family: !Join 
+        - '-'
+        - - !Ref TeamName
+          - !Ref ApplicationNameAtlas
+          - app
+          - td
           - !Ref EnvironUsed
-          - ContainerNameThunderBird
-        ECSTaskDefinitionArn: !FindInMap 
-          - Environment
+      TaskRoleArn: !Ref ECSTaskRole
+      ContainerDefinitions:
+        - Name: !Join 
+            - '-'
+            - - !Ref TeamName
+              - !Ref ApplicationNameAtlas
+              - app
+              - container
+              - !Ref EnvironUsed
+          Cpu: '150'
+          Essential: 'true'
+          Image: !Join 
+            - ''
+            - - !Ref 'AWS::AccountId'
+              - .dkr.ecr.
+              - !Ref 'AWS::Region'
+              - .amazonaws.com/
+              - !Ref ECRRepoAtlas
+              - ':'
+              - latest
+          MountPoints:
+            - ReadOnly: true
+              ContainerPath: /code/ecs
+              SourceVolume: ecs_env_var
+          Memory: '600'
+          PortMappings:
+            - ContainerPort: !Ref PortMappingsAtlas
+          Environment:
+            - Name: Environment
+              Value: !FindInMap 
+                - Environment
+                - !Ref EnvironUsed
+                - EnvironUsed
+            - Name: TeamName
+              Value: !Ref TeamName
+            - Name: ServiceName
+              Value: !Ref ApplicationNameAtlas
+            - Name: Port
+              Value: !Ref PortMappingsAtlas
+      Volumes:
+        - Name: ecs_env_var
+          Host:
+            SourcePath: /root/ecs_var
+  ECSTaskDefinitionTransporterClient:
+    Type: 'AWS::ECS::TaskDefinition'
+    Properties:
+      Family: !Join 
+        - '-'
+        - - !Ref TeamName
+          - !Ref ApplicationNameTransporterClient
+          - app
+          - td
           - !Ref EnvironUsed
-          - ECSTaskDefinitionArnThunderBird
-        ECSServiceRoleArn: !GetAtt 
-          - ECSServiceRole
-          - Arn
-        AutoscalingRoleArn: !GetAtt 
-          - AutoscalingRole
-          - Arn
-        ECSServiceName: !FindInMap 
-          - Environment
+      TaskRoleArn: !Ref ECSTaskRole
+      ContainerDefinitions:
+        - Name: !Join 
+            - '-'
+            - - !Ref TeamName
+              - !Ref ApplicationNameTransporterClient
+              - app
+              - container
+              - !Ref EnvironUsed
+          Cpu: '150'
+          Essential: 'true'
+          Image: !Join 
+            - ''
+            - - !Ref 'AWS::AccountId'
+              - .dkr.ecr.
+              - !Ref 'AWS::Region'
+              - .amazonaws.com/
+              - !Ref ECRRepoTransporterClient
+              - ':'
+              - latest
+          MountPoints:
+            - ReadOnly: true
+              ContainerPath: /code/ecs
+              SourceVolume: ecs_env_var
+          Memory: '600'
+          PortMappings:
+            - ContainerPort: !Ref PortMappingsTransporterClient
+          Environment:
+            - Name: Environment
+              Value: !FindInMap 
+                - Environment
+                - !Ref EnvironUsed
+                - EnvironUsed
+            - Name: TeamName
+              Value: !Ref TeamName
+            - Name: ServiceName
+              Value: !Ref ApplicationNameTransporterClient
+            - Name: Port
+              Value: !Ref PortMappingsTransporterClient
+      Volumes:
+        - Name: ecs_env_var
+          Host:
+            SourcePath: /root/ecs_var
+  ECSTaskDefinitionReporting:
+    Type: 'AWS::ECS::TaskDefinition'
+    Properties:
+      Family: !Join 
+        - '-'
+        - - !Ref TeamName
+          - !Ref ApplicationNameReporting
+          - app
+          - td
           - !Ref EnvironUsed
-          - ServiceNameThunderBird
-        ProjectTeam: !Ref ProjectTeam
-        ECSClusterName: !FindInMap 
-          - Environment
-          - !Ref EnvironUsed
-          - ECSClusterName
-        ALBEndpoint: !FindInMap 
-          - Environment
-          - !Ref EnvironUsed
-          - InternalALBEndpoint
-        ALBCanonicalHostedZoneID: !Ref ALBCanonicalHostedZoneID
-        ALBFullName: !FindInMap 
-          - Environment
-          - !Ref EnvironUsed
-          - InternalALBFullName
-        TargetGroupFullName: !GetAtt 
-          - TargetGroupThunderBird
-          - TargetGroupFullName
-        5XXCodeSNS: !FindInMap 
-          - Environment
-          - !Ref EnvironUsed
-          - 5XXCodeSNS
-        UnhealthyHostSNS: !FindInMap 
-          - Environment
-          - !Ref EnvironUsed
-          - UnhealthyHostSNS
-        ProjectName: !Ref ProjectName
-        ServiceName: !Ref ServiceName
-        OperatorEmail: !Ref OperatorEmail
-Outputs: {}
+      TaskRoleArn: !Ref ECSTaskRole
+      ContainerDefinitions:
+        - Name: !Join 
+            - '-'
+            - - !Ref TeamName
+              - !Ref ApplicationNameReporting
+              - app
+              - container
+              - !Ref EnvironUsed
+          Cpu: '150'
+          Essential: 'true'
+          Image: !Join 
+            - ''
+            - - !Ref 'AWS::AccountId'
+              - .dkr.ecr.
+              - !Ref 'AWS::Region'
+              - .amazonaws.com/
+              - !Ref ECRRepoReporting
+              - ':'
+              - latest
+          MountPoints:
+            - ReadOnly: true
+              ContainerPath: /code/ecs
+              SourceVolume: ecs_env_var
+          Memory: '600'
+          PortMappings:
+            - ContainerPort: !Ref PortMappingsReporting
+          Environment:
+            - Name: Environment
+              Value: !FindInMap 
+                - Environment
+                - !Ref EnvironUsed
+                - EnvironUsed
+            - Name: TeamName
+              Value: !Ref TeamName
+            - Name: ServiceName
+              Value: !Ref ApplicationNameReporting
+            - Name: Port
+              Value: !Ref PortMappingsReporting
+      Volumes:
+        - Name: ecs_env_var
+          Host:
+            SourcePath: /root/ecs_var
+Outputs:
+  ECSTaskRole:
+    Description: Elastic Container Service Task Role Name
+    Value: !Ref ECSTaskRole
+  ECSTaskDefinitionThunderBird:
+    Description: Elastic Container Service Task Definition for RateEngine
+    Value: !Ref ECSTaskDefinitionThunderBird
