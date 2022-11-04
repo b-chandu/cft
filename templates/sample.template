@@ -1,358 +1,65 @@
-AWSTemplateFormatVersion: 2010-09-09
-Description: CloudFormation Template For Setting up the UI Services on AWS ECS
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  Basic Template
 Parameters:
-  EnvironUsed:
-    Default: stage
+  ApplicationName:
     Type: String
-    AllowedValues:
-      - dev
-      - stage
-      - preprod
-      - prod
-  ProjectTeam:
-    Default: devops
-    Description: Project team name.
-    Type: String
-  TeamName:
-    Default: doos
-    Description: Team name.
-    Type: String
-  ApplicationNameThunderBird:
-    Default: thunderbird
     Description: Application Name
-    Type: String
-  PortMappingsThunderBird:
-    Default: 9100
-    Type: Number
-  ECRRepoThunderBird:
-    Default: doos/thunderbird
-    Description: ECR Name
-    Type: String
-  ApplicationNameAtlas:
-    Default: atlas
-    Description: Application Name
-    Type: String
-  PortMappingsAtlas:
-    Default: 9100
-    Type: Number
-  ECRRepoAtlas:
-    Default: doos/atlas
-    Description: ECR Name
-    Type: String
-  PortMappingsTransporterClient:
-    Default: 9100
-    Type: Number
-  ECRRepoTransporterClient:
-    Default: doos/transporterclient
-    Description: ECR Name
-    Type: String
-  ApplicationNameTransporterClient:
-    Default: transporterclient
-    Description: Application Name
-    Type: String
-  ApplicationNameReporting:
-    Default: reporting
-    Description: Application Name
-    Type: String
-  PortMappingsReporting:
-    Default: 9200
-    Type: Number
-  ECRRepoReporting:
-    Default: doos/reporting
-    Description: ECR Name
-    Type: String
-  ProjectName:
-    Default: ECS
-    Description: ECS
-    Type: String
-  ServiceName:
-    Description: Service Team Name
-    Default: api
-    Type: String
-  OperatorEmail:
-    Default: dev-ops@fptechscience.com
-    Description: EMail address to notify if there are any operational issues
-    Type: String
-    AllowedPattern: >-
-      ([a-zA-Z0-9_\-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)
-    ConstraintDescription: must be a valid email address.
-Mappings:
   Environment:
-    dev:
-      EnvironUsed: dev
-    stage:
-      EnvironUsed: staging
-    preprod:
-      EnvironUsed: preprod
-    prod:
-      EnvironUsed: prod
+    Type: String
+    Default: Test
+    Description: Environment
+    AllowedValues:
+      - Dev
+      - Test
+  TestEnvironment:
+    Type: String
+    Default: String
+    Description: Another Environment
+    AllowedValues:
+      - Dev
+      - Test
+      - Prod
+  BillingContact:
+    Type: String
+    Default: billing@example.com
+    AllowedPattern: '^[A-Za-z0-9._%+-]+@example.com$'
+  OperationsContact:
+    Type: String
+    Default: operations@example.com
+    AllowedPattern: '^[A-Za-z0-9._%+-]+@example.com$'
+Conditions:
+  isProd:
+    Fn::Equals: [!Ref Environment, 'Prod']
 Resources:
-  ECSTaskRole:
-    Type: 'AWS::IAM::Role'
+  untaggedInstance:
+    Type: AWS::EC2::Instance
     Properties:
-      RoleName: !Join 
-        - '-'
-        - - !Ref TeamName
-          - !Ref ProjectName
-          - TaskRole
-          - !Ref ServiceName
-          - !Ref EnvironUsed
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - ecs-tasks.amazonaws.com
-            Action:
-              - 'sts:AssumeRole'
-      Path: /
-      Policies:
-        - PolicyName: !Join 
-            - '-'
-            - - !Ref TeamName
-              - !Ref ProjectName
-              - TaskRolePolicy
-              - !Ref ServiceName
-              - !Ref EnvironUsed
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Sid: S3Policy
-                Effect: Allow
-                Action:
-                  - 's3:list*'
-                  - 's3:get*'
-                  - 's3:put*'
-                Resource:
-                  - 'arn:aws:s3:::fpts-devops'
-                  - 'arn:aws:s3:::fpts-devops/*'
-              - Sid: CloudWatchMetricPermission
-                Effect: Allow
-                Action:
-                  - 'cloudwatch:PutMetricData'
-                Resource: '*'
-              - Sid: EC2Permission
-                Effect: Allow
-                Action:
-                  - 'ec2:DescribeTags'
-                Resource: '*'
-  ECSTaskDefinitionThunderBird:
-    Type: 'AWS::ECS::TaskDefinition'
+      ImageId: ami-123456
+  myInstance:
+    Type: AWS::EC2::Instance
     Properties:
-      Family: !Join 
-        - '-'
-        - - !Ref TeamName
-          - !Ref ApplicationNameThunderBird
-          - app
-          - td
-          - !Ref EnvironUsed
-      TaskRoleArn: !Ref ECSTaskRole
-      ContainerDefinitions:
-        - Name: !Join 
-            - '-'
-            - - !Ref TeamName
-              - !Ref ApplicationNameThunderBird
-              - app
-              - container
-              - !Ref EnvironUsed
-          Cpu: '150'
-          Essential: 'true'
-          Image: !Join 
-            - ''
-            - - !Ref 'AWS::AccountId'
-              - .dkr.ecr.
-              - !Ref 'AWS::Region'
-              - .amazonaws.com/
-              - !Ref ECRRepoThunderBird
-              - ':'
-              - latest
-          MountPoints:
-            - ReadOnly: true
-              ContainerPath: /code/ecs
-              SourceVolume: ecs_env_var
-          Memory: '600'
-          PortMappings:
-            - ContainerPort: !Ref PortMappingsThunderBird
-          Environment:
-            - Name: Environment
-              Value: !FindInMap 
-                - Environment
-                - !Ref EnvironUsed
-                - EnvironUsed
-            - Name: TeamName
-              Value: !Ref TeamName
-            - Name: ServiceName
-              Value: !Ref ApplicationNameThunderBird
-            - Name: Port
-              Value: !Ref PortMappingsThunderBird
-      Volumes:
-        - Name: ecs_env_var
-          Host:
-            SourcePath: /root/ecs_var
-  ECSTaskDefinitionAtlas:
-    Type: 'AWS::ECS::TaskDefinition'
-    Properties:
-      Family: !Join 
-        - '-'
-        - - !Ref TeamName
-          - !Ref ApplicationNameAtlas
-          - app
-          - td
-          - !Ref EnvironUsed
-      TaskRoleArn: !Ref ECSTaskRole
-      ContainerDefinitions:
-        - Name: !Join 
-            - '-'
-            - - !Ref TeamName
-              - !Ref ApplicationNameAtlas
-              - app
-              - container
-              - !Ref EnvironUsed
-          Cpu: '150'
-          Essential: 'true'
-          Image: !Join 
-            - ''
-            - - !Ref 'AWS::AccountId'
-              - .dkr.ecr.
-              - !Ref 'AWS::Region'
-              - .amazonaws.com/
-              - !Ref ECRRepoAtlas
-              - ':'
-              - latest
-          MountPoints:
-            - ReadOnly: true
-              ContainerPath: /code/ecs
-              SourceVolume: ecs_env_var
-          Memory: '600'
-          PortMappings:
-            - ContainerPort: !Ref PortMappingsAtlas
-          Environment:
-            - Name: Environment
-              Value: !FindInMap 
-                - Environment
-                - !Ref EnvironUsed
-                - EnvironUsed
-            - Name: TeamName
-              Value: !Ref TeamName
-            - Name: ServiceName
-              Value: !Ref ApplicationNameAtlas
-            - Name: Port
-              Value: !Ref PortMappingsAtlas
-      Volumes:
-        - Name: ecs_env_var
-          Host:
-            SourcePath: /root/ecs_var
-  ECSTaskDefinitionTransporterClient:
-    Type: 'AWS::ECS::TaskDefinition'
-    Properties:
-      Family: !Join 
-        - '-'
-        - - !Ref TeamName
-          - !Ref ApplicationNameTransporterClient
-          - app
-          - td
-          - !Ref EnvironUsed
-      TaskRoleArn: !Ref ECSTaskRole
-      ContainerDefinitions:
-        - Name: !Join 
-            - '-'
-            - - !Ref TeamName
-              - !Ref ApplicationNameTransporterClient
-              - app
-              - container
-              - !Ref EnvironUsed
-          Cpu: '150'
-          Essential: 'true'
-          Image: !Join 
-            - ''
-            - - !Ref 'AWS::AccountId'
-              - .dkr.ecr.
-              - !Ref 'AWS::Region'
-              - .amazonaws.com/
-              - !Ref ECRRepoTransporterClient
-              - ':'
-              - latest
-          MountPoints:
-            - ReadOnly: true
-              ContainerPath: /code/ecs
-              SourceVolume: ecs_env_var
-          Memory: '600'
-          PortMappings:
-            - ContainerPort: !Ref PortMappingsTransporterClient
-          Environment:
-            - Name: Environment
-              Value: !FindInMap 
-                - Environment
-                - !Ref EnvironUsed
-                - EnvironUsed
-            - Name: TeamName
-              Value: !Ref TeamName
-            - Name: ServiceName
-              Value: !Ref ApplicationNameTransporterClient
-            - Name: Port
-              Value: !Ref PortMappingsTransporterClient
-      Volumes:
-        - Name: ecs_env_var
-          Host:
-            SourcePath: /root/ecs_var
-  ECSTaskDefinitionReporting:
-    Type: 'AWS::ECS::TaskDefinition'
-    Properties:
-      Family: !Join 
-        - '-'
-        - - !Ref TeamName
-          - !Ref ApplicationNameReporting
-          - app
-          - td
-          - !Ref EnvironUsed
-      TaskRoleArn: !Ref ECSTaskRole
-      ContainerDefinitions:
-        - Name: !Join 
-            - '-'
-            - - !Ref TeamName
-              - !Ref ApplicationNameReporting
-              - app
-              - container
-              - !Ref EnvironUsed
-          Cpu: '150'
-          Essential: 'true'
-          Image: !Join 
-            - ''
-            - - !Ref 'AWS::AccountId'
-              - .dkr.ecr.
-              - !Ref 'AWS::Region'
-              - .amazonaws.com/
-              - !Ref ECRRepoReporting
-              - ':'
-              - latest
-          MountPoints:
-            - ReadOnly: true
-              ContainerPath: /code/ecs
-              SourceVolume: ecs_env_var
-          Memory: '600'
-          PortMappings:
-            - ContainerPort: !Ref PortMappingsReporting
-          Environment:
-            - Name: Environment
-              Value: !FindInMap 
-                - Environment
-                - !Ref EnvironUsed
-                - EnvironUsed
-            - Name: TeamName
-              Value: !Ref TeamName
-            - Name: ServiceName
-              Value: !Ref ApplicationNameReporting
-            - Name: Port
-              Value: !Ref PortMappingsReporting
-      Volumes:
-        - Name: ecs_env_var
-          Host:
-            SourcePath: /root/ecs_var
-Outputs:
-  ECSTaskRole:
-    Description: Elastic Container Service Task Role Name
-    Value: !Ref ECSTaskRole
-  ECSTaskDefinitionThunderBird:
-    Description: Elastic Container Service Task Definition for RateEngine
-    Value: !Ref ECSTaskDefinitionThunderBird
+      ImageId: ami-123456
+      Tags:
+      -
+        Key: application
+        Value: !Ref ApplicationName
+      -
+        Key: environment
+        Value: !Ref Environment
+      -
+        Key: environment
+        Value: !If [isProd, 'Yes', !Ref Environment]
+      -
+        Key: environment
+        Value: !Ref TestEnvironment
+      -
+        Key: billing_contact
+        Value: !Ref BillingContact
+      -
+        Key: operations_contact
+        Value: !Ref OperationsContact
+      -
+        Key: security_contact
+        Value: security@example.c
