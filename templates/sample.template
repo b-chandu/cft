@@ -1,65 +1,9 @@
----
-AWSTemplateFormatVersion: "2010-09-09"
-Description: >
-  Basic Template
-Parameters:
-  ApplicationName:
-    Type: String
-    Description: Application Name
-  Environment:
-    Type: String
-    Default: Test
-    Description: Environment
-    AllowedValues:
-      - Dev
-      - Test
-  TestEnvironment:
-    Type: String
-    Default: String
-    Description: Another Environment
-    AllowedValues:
-      - Dev
-      - Test
-      - Prod
-  BillingContact:
-    Type: String
-    Default: billing@example.com
-    AllowedPattern: '^[A-Za-z0-9._%+-]+@example.com$'
-  OperationsContact:
-    Type: String
-    Default: operations@example.com
-    AllowedPattern: '^[A-Za-z0-9._%+-]+@example.com$'
-Conditions:
-  isProd:
-    Fn::Equals: [!Ref Environment, 'Prod']
+AWSTemplateFormatVersion: 2010-09-09
+Description: "Test if we are not passing a parameter and are relying on a default value in the child template"
 Resources:
-  untaggedInstance:
-    Type: AWS::EC2::Instance
+  MyStack:
+    Type: AWS::CloudFormation::Stack
     Properties:
-      ImageId: ami-123456
-  myInstance:
-    Type: AWS::EC2::Instance
-    Properties:
-      ImageId: ami-123456
-      Tags:
-      -
-        Key: application
-        Value: !Ref ApplicationName
-      -
-        Key: environment
-        Value: !Ref Environment
-      -
-        Key: environment
-        Value: !If [isProd, 'Yes', !Ref Environment]
-      -
-        Key: environment
-        Value: !Ref TestEnvironment
-      -
-        Key: billing_contact
-        Value: !Ref BillingContact
-      -
-        Key: operations_contact
-        Value: !Ref OperationsContact
-      -
-        Key: security_contact
-        Value: security@example.c
+      TemplateURL: !Sub ['https://abucket.${QSS3Region}.amazonaws.com/${Prefix}/templates/DefaultParameter_child.yml', {QSS3Region: !If [ 1, s3-us-gov-west-1, s3]}]
+      Parameters:
+        ParameterWithDefault: "I am passing a value even though I could skip and use the child stack's default value"
