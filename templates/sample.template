@@ -1,86 +1,286 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: Creates IAM roles for TaskCat CI. (qs-1s0p06afq)
+Description: CloudFormation Template For Setting up the UI Services on AWS ECS
+Parameters:
+  EnvironUsed:
+    Default: stage
+    Type: String
+    AllowedValues:
+      - dev
+      - stage
+      - preprod
+      - prod
+  ProjectTeam:
+    Default: devops
+    Description: Project team name.
+    Type: String
+  TeamName:
+    Default: doos
+    Description: Team name.
+    Type: String
+  ApplicationNameThunderBird:
+    Default: thunderbird
+    Description: Application Name
+    Type: String
+  PortMappingsThunderBird:
+    Default: 9100
+    Type: Number
+  ScalingTargetRequired:
+    Description: ScalingTargetRequired
+    Default: 'No'
+    Type: String
+    AllowedValues:
+      - 'Yes'
+      - 'No'
+  ALBCanonicalHostedZoneID:
+    Default: ZP97RAFLXTNZK
+    Description: ALB Canonical HostedZone ID.
+    Type: String
+  InternalHostedZoneId:
+    Default: Z34RAEX25YZORT
+    Description: Internal HostedZone ID.
+    Type: String
+  ALBListener:
+    Default: >-
+      arn:aws:elasticloadbalancing:ap-south-1:067138747236:listener/app/ALB-int-common-api-prod/3b2a612a1e7ad967/196ae8c2bc7df9da
+    Description: Internal HostedZone ID.
+    Type: String
+  ProjectName:
+    Default: ECS
+    Description: ECS
+    Type: String
+  ServiceName:
+    Description: Service Team Name
+    Default: api
+    Type: String
+  OperatorEmail:
+    Description: EMail address to notify if there are any operational issues
+    Type: String
+    Default: dev-ops@fptechscience.com
+    AllowedPattern: >-
+      ([a-zA-Z0-9_\-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)
+    ConstraintDescription: must be a valid email address.
+Mappings:
+  Environment:
+    dev:
+      NestedTemplateURL: >-
+        https://s3.ap-south-1.amazonaws.com/fpts-devops/aws/ecs-setup/api/nested-ecs-api-service-dev.template
+      ECSClusterName: ECS-M-cluster-api-devops-dev
+      InternalALBEndpoint: >-
+        internal-ALB-int-logistics-api-dev-924057639.ap-south-1.elb.amazonaws.com
+      InternalALBArn: >-
+        arn:aws:elasticloadbalancing:ap-south-1:067138747236:loadbalancer/app/ALB-int-logistics-api-dev/082a1087e75cee6d
+      InternalALBFullName: app/ALB-int-logistics-api-dev/082a1087e75cee6d
+      ContainerNameRateEngine: logistics-rateengine-app-container-dev
+      DomainNameRateEngine: rateengine-api-dev.fptsinternal.com
+      ECSTaskDefinitionArnRateEngine: >-
+        arn:aws:ecs:ap-south-1:067138747236:task-definition/logistics-rateengine-app-td-dev:59
+      ServiceNameRateEngine: logistics-rateengine-dev
+      UnhealthyHostSNS: 'arn:aws:sns:ap-south-1:067138747236:Devops_SNS_UnhealthyHost'
+      5XXCodeSNS: 'arn:aws:sns:ap-south-1:067138747236:Devops_SNS_5xx_code'
+      VpcId: vpc-b43b33dd
+    stage:
+      NestedTemplateURL: >-
+        https://s3.ap-south-1.amazonaws.com/fpts-devops/aws/ecs-setup/api/nested-ecs-api-service-stage.template
+      ECSClusterName: ECS-M-cluster-api-devops-stage
+      InternalALBEndpoint: >-
+        internal-ALB-int-common-api-stage-1802137141.ap-south-1.elb.amazonaws.com
+      InternalALBArn: >-
+        arn:aws:elasticloadbalancing:ap-south-1:067138747236:loadbalancer/app/ALB-int-common-api-stage/5bfe2ea956cdc1f2
+      InternalALBFullName: app/ALB-int-common-api-stage/5bfe2ea956cdc1f2
+      ContainerNameThunderBird: doos-thunderbird-app-container-stage
+      DomainNameThunderBird: thunderbird-api-stage.fptsinternal.com
+      ECSTaskDefinitionArnThunderBird: >-
+        arn:aws:ecs:ap-south-1:067138747236:task-definition/doos-thunderbird-app-td-stage:1
+      ServiceNameThunderBird: doos-thunderbird-stage
+      UnhealthyHostSNS: 'arn:aws:sns:ap-south-1:067138747236:Devops_SNS_UnhealthyHost'
+      5XXCodeSNS: 'arn:aws:sns:ap-south-1:067138747236:Devops_SNS_5xx_code'
+      VpcId: vpc-5cc0c835
+    preprod:
+      NestedTemplateURL: >-
+        https://s3.ap-south-1.amazonaws.com/fpts-devops/aws/ecs-setup/api/nested-ecs-api-service-preprod.template
+      ECSClusterName: ECS-M-cluster-api-devops-preprod
+      InternalALBEndpoint: >-
+        internal-ALB-int-common-api-preprod-2078867008.ap-south-1.elb.amazonaws.com
+      InternalALBArn: >-
+        arn:aws:elasticloadbalancing:ap-south-1:067138747236:loadbalancer/app/ALB-int-common-api-preprod/cc884d778db7bb9a
+      InternalALBFullName: app/ALB-int-common-api-preprod/cc884d778db7bb9a
+      ContainerNameThunderBird: doos-thunderbird-app-container-preprod
+      DomainNameThunderBird: thunderbird-api-preprod.fptsinternal.com
+      ECSTaskDefinitionArnThunderBird: >-
+        arn:aws:ecs:ap-south-1:067138747236:task-definition/doos-thunderbird-app-td-preprod:1
+      ServiceNameThunderBird: doos-thunderbird-preprod
+      UnhealthyHostSNS: 'arn:aws:sns:ap-south-1:067138747236:Devops_SNS_UnhealthyHost'
+      5XXCodeSNS: 'arn:aws:sns:ap-south-1:067138747236:Devops_SNS_5xx_code'
+      VpcId: vpc-53c0c83a
+    prod:
+      NestedTemplateURL: >-
+        https://s3.ap-south-1.amazonaws.com/fpts-devops/aws/ecs-setup/api/nested-ecs-api-service-prod.template
+      ECSClusterName: ECS-M-cluster-api-devops-prod
+      InternalALBEndpoint: internal-ALB-int-common-api-prod-2075336545.ap-south-1.elb.amazonaws.com
+      InternalALBArn: >-
+        arn:aws:elasticloadbalancing:ap-south-1:067138747236:loadbalancer/app/ALB-int-common-api-prod/3b2a612a1e7ad967
+      InternalALBFullName: app/ALB-int-common-api-prod/3b2a612a1e7ad967
+      ContainerNameThunderBird: doos-thunderbird-app-container-prod
+      DomainNameThunderBird: thunderbird-api.fptsinternal.com
+      ECSTaskDefinitionArnThunderBird: >-
+        arn:aws:ecs:ap-south-1:067138747236:task-definition/doos-thunderbird-app-td-prod:2
+      ServiceNameThunderBird: doos-thunderbird-prod
+      UnhealthyHostSNS: 'arn:aws:sns:ap-south-1:067138747236:Devops_SNS_UnhealthyHost-Prod'
+      5XXCodeSNS: 'arn:aws:sns:ap-south-1:067138747236:Devops_SNS_5xx_code-Prod'
+      VpcId: vpc-383b3351
 Resources:
-  CodeBuildServiceRole:
+  ECSServiceRole:
     Type: 'AWS::IAM::Role'
     Properties:
       AssumeRolePolicyDocument:
-        Version: 2012-10-17
         Statement:
-          - Sid: ''
-            Effect: Allow
+          - Effect: Allow
             Principal:
-              Service: codebuild.amazonaws.com
-            Action: 'sts:AssumeRole'
-      Path: /
-      ManagedPolicyArns:
-        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/AdministratorAccess'
-  CodePipelineServiceRole:
-    Type: 'AWS::IAM::Role'
-    Metadata:
-      cfn-lint:
-        config:
-          ignore_checks:
-            - EIAMPolicyWildcardResource
-          ignore_reasons:
-            EIAMPolicyWildcardResource: "Need to invoke codepipeline stages; create CFN stacks"
-
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Sid: ''
-            Effect: Allow
-            Principal:
-              Service: codepipeline.amazonaws.com
-            Action: 'sts:AssumeRole'
+              Service:
+                - ecs.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
       Path: /
       Policies:
-        - PolicyName: !Sub 'TaskCat-CICD-CodePipelineService-${AWS::Region}'
+        - PolicyName: !Join 
+            - '-'
+            - - !Ref TeamName
+              - servicerole-policy
+              - !Ref EnvironUsed
           PolicyDocument:
-            Version: 2012-10-17
             Statement:
-              - Action:
-                  - 's3:GetObject'
-                  - 's3:GetObjectVersion'
-                  - 's3:GetBucketVersioning'
-                  - 's3:PutObject'
-                Resource:
-                  - !Sub 'arn:${AWS::Partition}:s3:::${ArtifactBucket}'
-                  - !Sub 'arn:${AWS::Partition}:s3:::${ArtifactBucket}/*'
-                Effect: Allow
-              - Action:
-                  - 'cloudformation:CreateStack'
-                  - 'cloudformation:DeleteStack'
-                  - 'cloudformation:DescribeStacks'
-                  - 'cloudformation:ValidateTemplate'
+              - Effect: Allow
+                Action: '*'
                 Resource: '*'
-                Effect: Allow
-              - Action:
-                  - 'codebuild:BatchGetBuilds'
-                  - 'codebuild:StartBuild'
+  AutoscalingRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - application-autoscaling.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: !Join 
+            - '-'
+            - - !Ref TeamName
+              - service-autoscaling
+              - !Ref EnvironUsed
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'application-autoscaling:*'
+                  - 'cloudwatch:DescribeAlarms'
+                  - 'cloudwatch:PutMetricAlarm'
+                  - 'ecs:DescribeServices'
+                  - 'ecs:UpdateService'
                 Resource: '*'
-                Effect: Allow
-              - Action:
-                   - 'lambda:InvokeFunction'
-                Resource: '*'
-                Effect: Allow
-Parameters:
-  ArtifactBucket:
-    AllowedPattern: '^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$'
-    ConstraintDescription: >-
-      Quick Start bucket name can include numbers, lowercase letters, uppercase
-      letters, and hyphens (-). It cannot start or end with a hyphen (-).
-    Description: S3 bucket name used to store build artifacts.
-    Type: String
-Outputs:
-  CodePipelineRoleArn:
-    Description: Code Pipeline service role arn
-    Value: !GetAtt
-      - CodePipelineServiceRole
-      - Arn
-  CodeBuildRoleArn:
-    Description: Code Build service role arn
-    Value: !GetAtt
-      - CodeBuildServiceRole
-      - Arn
+  TargetGroupThunderBird:
+    Type: 'AWS::ElasticLoadBalancingV2::TargetGroup'
+    Properties:
+      HealthCheckIntervalSeconds: 121
+      HealthCheckPath: /health
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 120
+      HealthyThresholdCount: 2
+      Name: !Join 
+        - '-'
+        - - TG
+          - !Ref ApplicationNameThunderBird
+          - !Ref EnvironUsed
+      Port: 80
+      Protocol: HTTP
+      UnhealthyThresholdCount: 5
+      VpcId: !FindInMap 
+        - Environment
+        - !Ref EnvironUsed
+        - VpcId
+  ECSALBListenerRuleThunderBird:
+    Type: 'AWS::ElasticLoadBalancingV2::ListenerRule'
+    DependsOn:
+      - TargetGroupThunderBird
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroupThunderBird
+      Conditions:
+        - Field: host-header
+          Values:
+            - !FindInMap 
+              - Environment
+              - !Ref EnvironUsed
+              - DomainNameThunderBird
+      ListenerArn: !Ref ALBListener
+      Priority: 399
+  ThunderBird:
+    Type: 'AWS::CloudFormation::Stack'
+    DependsOn:
+      - TargetGroupThunderBird
+    Properties:
+      TemplateURL: !FindInMap 
+        - Environment
+        - !Ref EnvironUsed
+        - NestedTemplateURL
+      Parameters:
+        EnvironUsed: !Ref EnvironUsed
+        ScalingTargetRequired: !Ref ScalingTargetRequired
+        ApplicationName: !Ref ApplicationNameThunderBird
+        ServiceDomainName: !FindInMap 
+          - Environment
+          - !Ref EnvironUsed
+          - DomainNameThunderBird
+        HostedZoneId: !Ref InternalHostedZoneId
+        TargetGroupArn: !Ref TargetGroupThunderBird
+        ContainerPort: !Ref PortMappingsThunderBird
+        ContainerName: !FindInMap 
+          - Environment
+          - !Ref EnvironUsed
+          - ContainerNameThunderBird
+        ECSTaskDefinitionArn: !FindInMap 
+          - Environment
+          - !Ref EnvironUsed
+          - ECSTaskDefinitionArnThunderBird
+        ECSServiceRoleArn: !GetAtt 
+          - ECSServiceRole
+          - Arn
+        AutoscalingRoleArn: !GetAtt 
+          - AutoscalingRole
+          - Arn
+        ECSServiceName: !FindInMap 
+          - Environment
+          - !Ref EnvironUsed
+          - ServiceNameThunderBird
+        ProjectTeam: !Ref ProjectTeam
+        ECSClusterName: !FindInMap 
+          - Environment
+          - !Ref EnvironUsed
+          - ECSClusterName
+        ALBEndpoint: !FindInMap 
+          - Environment
+          - !Ref EnvironUsed
+          - InternalALBEndpoint
+        ALBCanonicalHostedZoneID: !Ref ALBCanonicalHostedZoneID
+        ALBFullName: !FindInMap 
+          - Environment
+          - !Ref EnvironUsed
+          - InternalALBFullName
+        TargetGroupFullName: !GetAtt 
+          - TargetGroupThunderBird
+          - TargetGroupFullName
+        5XXCodeSNS: !FindInMap 
+          - Environment
+          - !Ref EnvironUsed
+          - 5XXCodeSNS
+        UnhealthyHostSNS: !FindInMap 
+          - Environment
+          - !Ref EnvironUsed
+          - UnhealthyHostSNS
+        ProjectName: !Ref ProjectName
+        ServiceName: !Ref ServiceName
+        OperatorEmail: !Ref OperatorEmail
+Outputs: {}
