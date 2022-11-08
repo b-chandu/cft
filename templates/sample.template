@@ -1,9 +1,28 @@
-AWSTemplateFormatVersion: 2010-09-09
-Description: "Test if we are not passing a parameter and are relying on a default value in the child template"
+Description: Create a VPC with a SG which references itself
+AWSTemplateFormatVersion: '2010-09-09'
 Resources:
-  MyStack:
-    Type: AWS::CloudFormation::Stack
+  vpctester:
+    Type: AWS::EC2::VPC
     Properties:
-      TemplateURL: !Sub ['https://abucket.${QSS3Region}.amazonaws.com/${Prefix}/templates/DefaultParameter_child.yml', {QSS3Region: !If [ 1, s3-us-gov-west-1, s3]}]
-      Parameters:
-        ParameterWithDefault: "I am passing a value even though I could skip and use the child stack's default value"
+      CidrBlock: 172.16.0.0/23
+      EnableDnsSupport: false
+      EnableDnsHostnames: false
+      InstanceTenancy: default
+      Tags:
+      - Key: Name
+        Value: vpctester
+  sgtester:
+    Type: AWS::EC2::SecurityGroup
+    DependsOn: vpctester
+    Properties:
+      GroupDescription: vpc tester sg
+      VpcId: !Ref vpctester
+  sgtesteringress:
+    Type: AWS::EC2::SecurityGroupIngress
+    DependsOn: sgtester
+    Properties:
+      GroupId: !Ref sgtester
+      IpProtocol: tcp
+      FromPort: 0
+      ToPort: 65535
+      SourceSecurityGroupId: !Ref sgtester
