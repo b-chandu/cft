@@ -17,12 +17,3 @@ Resources:
     Properties:
       GroupDescription: vpc tester sg
       VpcId: !Ref vpctester
-  sgtesteringress:
-    Type: AWS::EC2::SecurityGroupIngress
-    DependsOn: sgtester
-    Properties:
-      GroupId: !Ref sgtester
-      IpProtocol: tcp
-      FromPort: 0
-      ToPort: 65535
-      SourceSecurityGroupId: !Ref sgtester
