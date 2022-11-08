@@ -3,7 +3,6 @@ AWSTemplateFormatVersion: '2010-09-09'
 Resources:
   sgtester:
     Type: AWS::EC2::SecurityGroup
-    DependsOn: vpctester
     Properties:
       GroupDescription: vpc tester sg
       VpcId: vpc-0e3384da61ec95b4f
